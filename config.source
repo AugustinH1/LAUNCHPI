@@ -1,0 +1,7 @@
+#fichier config.source
+
+export PATH_CC=/home/ah/Bureau/LAUNCHPI/tools-master/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/
+
+export CCC=$PATH_CC/arm-linux-gnueabihf-gcc
+
+export CXX=$PATH_CC/arm-linux-gnueabihf-c++
