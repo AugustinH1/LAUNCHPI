@@ -1,11 +1,11 @@
 #include "../include/button.h"
 
-void initButtonMatrix(button *matrix) {
+void initButtonMatrix(button *matrix, int row, int col) {
     double baseFrequency = 440.0;
     int i,j;
-    for (i = 0; i < ROW; i++) {
-        for (j = 0; j < COL; j++) {
-            matrix->frequencies[i][j] = baseFrequency * pow(2, (double) (i * COL + j) / 12.0);
+    for (i = 0; i < row; i++) {
+        for (j = 0; j < col; j++) {
+            matrix->frequencies[i][j] = baseFrequency * pow(2, (double) (i * col + j) / 12.0);
             matrix->active[i][j] = 0;
         }
     }

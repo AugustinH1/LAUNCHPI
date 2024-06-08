@@ -29,7 +29,7 @@ int main() {
     
 
     button matrix;
-    initButtonMatrix(&matrix);
+    initButtonMatrix(&matrix, ROW, COL);
 
     // Initialiser ncurses
     initscr();
@@ -65,7 +65,7 @@ int main() {
         
 
     }
-
+    
     //fermeture de la socket de dialogue
     close(sockDialogue.fd);
 
@@ -111,23 +111,18 @@ void modify_frequency(button *matrix) {
 }
 
 void serialize_matrix(button *matrix, char *buffer) {
-    int offset = 0;
-    int i,j;
-    for (i = 0; i < ROW; ++i) {
-        for (j = 0; j < COL; ++j) {
-            offset += sprintf(buffer + offset, "%.2f ", matrix->frequencies[i][j]);
-        }
-    }
+    sprintf(buffer, "%.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f", 
+    matrix->frequencies[0][0], matrix->frequencies[0][1], matrix->frequencies[0][2], matrix->frequencies[0][3],
+    matrix->frequencies[1][0], matrix->frequencies[1][1], matrix->frequencies[1][2], matrix->frequencies[1][3],
+    matrix->frequencies[2][0], matrix->frequencies[2][1], matrix->frequencies[2][2], matrix->frequencies[2][3],
+    matrix->frequencies[3][0], matrix->frequencies[3][1], matrix->frequencies[3][2], matrix->frequencies[3][3]);
 }
 
 
 void deserialize_matrix(char *buffer, button *matrix) {
-    int offset = 0;
-    int i,j;
-    for (i = 0; i < ROW; ++i) {
-        for (j = 0; j < COL; ++j) {
-            sscanf(buffer + offset, "%lf", &matrix->frequencies[i][j]);
-            offset += 6;
-        }
-    }
+    sscanf(buffer, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+    &matrix->frequencies[0][0], &matrix->frequencies[0][1], &matrix->frequencies[0][2], &matrix->frequencies[0][3],
+    &matrix->frequencies[1][0], &matrix->frequencies[1][1], &matrix->frequencies[1][2], &matrix->frequencies[1][3],
+    &matrix->frequencies[2][0], &matrix->frequencies[2][1], &matrix->frequencies[2][2], &matrix->frequencies[2][3],
+    &matrix->frequencies[3][0], &matrix->frequencies[3][1], &matrix->frequencies[3][2], &matrix->frequencies[3][3]);
 }
