@@ -29,7 +29,9 @@ int main() {
     
 
     button matrix;
-    initButtonMatrix(&matrix, ROW, COL);
+
+    recevoir(&sockDialogue, &matrix, (pFct)deserialize_matrix);
+    //initButtonMatrix(&matrix, ROW, COL);
 
     // Initialiser ncurses
     initscr();
@@ -66,6 +68,9 @@ int main() {
 
     }
     
+    //envoyer la matriceou tou  est a -1
+    matrix.frequencies[0][0] = -1;
+    envoyer(&sockDialogue, &matrix, (pFct)serialize_matrix);
     //fermeture de la socket de dialogue
     close(sockDialogue.fd);
 
@@ -98,13 +103,22 @@ void display_matrix(button *matrix) {
 
 void modify_frequency(button *matrix) {
     echo();  // Activer l'affichage de la saisie utilisateur
-    mvprintw(ROW + 3, 0, "Entrez la nouvelle fréquence pour le bouton sélectionné : ");
+    mvprintw(ROW + 3, 0, "Entrez la nouvelle fréquence pour le bouton [%d, %d] : ", selected_row, selected_col);
+    clrtoeol();  // Effacer la ligne après le message
     refresh();
-    
-    char input[100];
-    getstr(input);  // Attendre que l'utilisateur entre une chaîne de caractères
-    
-    matrix->frequencies[selected_row][selected_col] = atof(input);  // Convertir et stocker
+    while(1){    
+        char input[100];
+        getstr(input);  // Attendre que l'utilisateur entre une chaîne de caractères
+
+        //si valuer negative, redemader la saisie
+        if(atof(input) < 0){
+            mvprintw(ROW + 4, 0, "Valeur négative non autorisée");
+            refresh();
+        } else {
+            matrix->frequencies[selected_row][selected_col] = atof(input);  // Convertir et stocker
+            break;
+        }
+    }
     
     noecho();  // Désactiver l'affichage de la saisie utilisateur
     display_matrix(matrix);  // Mettre à jour l'affichage de la matrice

@@ -94,27 +94,34 @@ void *getMatriceInet(){
 
         close(sockEcoute.fd);
 
+        envoyer(&sockDialogue, &matrix, (pFct)serialize_matrix);
+
         while(1){
             //recevoir la matrice
             //button matrice;
             button tmp;
             recevoir(&sockDialogue, &tmp, (pFct)deserialize_matrix);
 
-            //copier les valeurs de frequence dans la matrice
-            memcpy(&matrix.frequencies, &tmp.frequencies, sizeof(tmp.frequencies));
-
             //Afficher
             int i,j;
+            int flag = 0;
             for (i = 0; i < ROW; i++) {
                 for (j = 0; j < COL; j++) {
-                    printf("%.2f ", matrix.frequencies[i][j]);
+                    printf("%.2f ", tmp.frequencies[i][j]);
+                    if(tmp.frequencies[i][j] == -1){
+                        flag = 1;
+                    }
                 }
                 printf("\n");
             }        
             
+            if(flag == 1){
+                printf("fin de la communication\n");
+                break;
+            }
 
-    
-            
+            //copier les valeurs de frequence dans la matrice
+            memcpy(&matrix.frequencies, &tmp.frequencies, sizeof(tmp.frequencies));
         }
         close(sockDialogue.fd);
     }

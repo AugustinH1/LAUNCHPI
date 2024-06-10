@@ -66,5 +66,8 @@ install400: main400Rpi.exe
 install: installJoyPi install400
 
 
+dev: main400PC.exe installJoyPi
+
+
 clean:
 	rm -f *.exe lib/*.o lib/*.a
