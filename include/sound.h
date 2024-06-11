@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <alsa/asoundlib.h>
 #include <math.h>
+#include <pthread.h>
 
 
 // Constantes
@@ -10,4 +11,4 @@
 #define AMPLITUDE 20000 // Amplitude réduite pour éviter la saturation
 
 void init_audio(snd_pcm_t **handle);
-void play_tones(snd_pcm_t *handle, double *frequencies, int num_frequencies);
+void play_tones(snd_pcm_t *handle, double *frequencies, int num_frequencies, double duration);

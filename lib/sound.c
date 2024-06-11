@@ -1,5 +1,11 @@
 #include "../include/sound.h"
 
+static double phases[100];  // Store phases for up to 100 frequencies
+
+// Mutex to synchronize phase updates
+pthread_mutex_t phase_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+
 void init_audio(snd_pcm_t **handle) {
     int err;
     snd_pcm_hw_params_t *params;
@@ -42,21 +48,21 @@ void init_audio(snd_pcm_t **handle) {
     snd_pcm_hw_params_free(params);
 }
 
-void play_tones(snd_pcm_t *handle, double *frequencies, int num_frequencies) {
+void play_tones(snd_pcm_t *handle, double *frequencies, int num_frequencies, double duration) {
     int err;
-    int frames = SAMPLE_RATE / 10; // Nombre d'échantillons pour 0.1 seconde
+    int frames = (SAMPLE_RATE * duration); // Number of samples for the given duration
     short buffer[frames];
-    double phases[num_frequencies];
     double phase_increments[num_frequencies];
-    int i,j;
+    int i, j;
 
-    // Initialiser les phases et les incréments de phase pour chaque fréquence
+    pthread_mutex_lock(&phase_mutex);
+
+    // Initialize phase increments for each frequency
     for (i = 0; i < num_frequencies; i++) {
-        phases[i] = 0.0;
         phase_increments[i] = 2.0 * M_PI * frequencies[i] / SAMPLE_RATE;
     }
 
-    // Générer les échantillons de l'onde sinusoïdale combinée
+    // Generate the combined sine wave samples
     for (i = 0; i < frames; i++) {
         double sample = 0.0;
         for (j = 0; j < num_frequencies; j++) {
@@ -66,17 +72,23 @@ void play_tones(snd_pcm_t *handle, double *frequencies, int num_frequencies) {
                 phases[j] -= 2.0 * M_PI;
             }
         }
-        buffer[i] = (short)(AMPLITUDE * sample / num_frequencies); // Moyennage pour éviter la saturation
+        buffer[i] = (short)(AMPLITUDE * sample / num_frequencies); // Averaging to avoid saturation
     }
 
-    // Jouer les échantillons
-    if ((err = snd_pcm_writei(handle, buffer, frames)) < 0) {
+    pthread_mutex_unlock(&phase_mutex);
+
+    // Write the samples to the audio device
+    int total_frames_written = 0;
+    while (total_frames_written < frames) {
+        err = snd_pcm_writei(handle, buffer + total_frames_written, frames - total_frames_written);
         if (err == -EPIPE) {
             // Buffer underrun
             snd_pcm_prepare(handle);
-        } else {
-            fprintf(stderr, "Erreur lors de l'écriture sur le périphérique audio : %s\n", snd_strerror(err));
+        } else if (err < 0) {
+            fprintf(stderr, "Error writing to audio device: %s\n", snd_strerror(err));
             exit(EXIT_FAILURE);
+        } else {
+            total_frames_written += err;
         }
     }
 }

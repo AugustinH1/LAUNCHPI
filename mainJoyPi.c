@@ -71,7 +71,7 @@ int main(void) {
         }
         
         //JOUER LE SON
-        play_tones(handle, frequencies, num_frequencies);
+        play_tones(handle, frequencies, num_frequencies, 0.1);
     }
 
     // Arrêter et fermer le périphérique audio
