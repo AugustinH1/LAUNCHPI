@@ -10,4 +10,5 @@ void initButtonMatrix(button *matrix, int row, int col) {
         }
     }
     memset(matrix->active, 0, sizeof(matrix->active));
+    matrix->vibreur = 0;
 }

@@ -14,6 +14,9 @@
 #define ROW 4
 #define COL 4
 
+#define SENSITIVE_BUTTON 0
+#define VIBRATION 2
+
 int rowPins[ROW] = {2, 3, 21, 22};   // Broches GPIO pour les lignes // pin 13, 15 29 31
 int colPins[COL] = {6, 25, 24, 23};  // Broches GPIO pour les colonnes // pin 22 37 35 33
 
@@ -228,6 +231,9 @@ void setup() {
         pinMode(colPins[i], INPUT);
         pullUpDnControl(colPins[i], PUD_UP);
     }
+
+    pinMode(SENSITIVE_BUTTON, INPUT);
+    pullUpDnControl(SENSITIVE_BUTTON, PUD_DOWN);
 }
 
 void readButtonMatrix(button *matrix) {
@@ -249,6 +255,13 @@ void readButtonMatrix(button *matrix) {
         digitalWrite(rowPins[row], HIGH);
 
     }
+
+    if(digitalRead(SENSITIVE_BUTTON) == HIGH)
+        digitalWrite(VIBRATION, HIGH);
+    else
+        digitalWrite(VIBRATION, LOW);
+
+    
 
     // Copier l'état temporaire dans la structure matrix
     memcpy(matrix->active, tmpActive, sizeof(tmpActive));

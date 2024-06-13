@@ -9,6 +9,7 @@
 typedef struct {
     double frequencies[ROW][COL];
     int active[ROW][COL];
+    int vibreur;
 } button;
 
 void initButtonMatrix(button *matrix, int row, int col);
