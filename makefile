@@ -4,7 +4,7 @@ CCC?=$(PATH_CC)/arm-linux-gnueabihf-gcc
 
 AR?=$(PATH_CC)/arm-linux-gnueabihf-ar
 
-IP_JOYPI?=192.168.190.204
+IP_JOYPI?=192.168.4.1
 IP_400?=
 
 CFLAGS = -Wall -Wextra
@@ -44,14 +44,20 @@ libINETRPI.a: sessionRPI.o dataRPI.o
 	rm -f lib/sessionRPI.o lib/dataRPI.o
 
 
-soundRPI.o: lib/sound.c
-	$(ARM) $(CFLAGS) $(TARGET_RPI) -c lib/sound.c -o lib/soundRPI.o
+sound.o: lib/sound.c
+	$(ARM) $(CFLAGS) $(TARGET_RPI) -c lib/sound.c -o lib/sound.o
 
-buttonRPI.o: lib/button.c
-	$(ARM) $(CFLAGS) $(TARGET_RPI) -c lib/button.c -o lib/buttonRPI.o
+button.o: lib/button.c
+	$(ARM) $(CFLAGS) $(TARGET_RPI) -c lib/button.c -o lib/button.o
 
-mainJoyPiRpi.exe: mainJoyPi.c soundRPI.o buttonRPI.o libINETRPI.a
-	$(ARM) $(CFLAGS) $(TARGET_RPI) mainJoyPi.c lib/soundRPI.o lib/buttonRPI.o -o mainJoyPiRpi.exe -l wiringPi -lasound -lm -lpthread -L lib -lINETRPI
+matrix.o: lib/matrix.c
+	$(ARM) $(CFLAGS) $(TARGET_RPI) -c lib/matrix.c -o lib/matrix.o -lpthread
+
+
+OBJ=lib/sound.o lib/button.o lib/matrix.o
+
+mainJoyPiRpi.exe: mainJoyPi.c sound.o button.o libINETRPI.a matrix.o
+	$(ARM) $(CFLAGS) $(TARGET_RPI) mainJoyPi.c $(OBJ) -o mainJoyPiRpi.exe -l wiringPi -lasound -lbcm2835 -lm -lpthread -L lib -lINETRPI
 
 
 
@@ -66,7 +72,11 @@ install400: main400Rpi.exe
 install: installJoyPi install400
 
 
-dev: main400PC.exe installJoyPi
+test_matrix.exe: test_matrix.c
+	$(ARM) $(CFLAGS) $(TARGET_RPI) $^ -o $@ -lbcm2835 -lm
+
+installtest: test_matrix.exe
+	sshpass -ppi scp test_matrix.exe pi@$(IP_JOYPI):/home/pi/
 
 
 clean:

@@ -6,7 +6,7 @@
 
 //CONFIGURATION RESEAU
 #define PORT_SVC 5000
-#define IP "192.168.190.204"
+#define IP "192.168.4.1"
 
 #define ROW 4
 #define COL 4

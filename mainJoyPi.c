@@ -1,5 +1,6 @@
 #include "include/sound.h"
 #include "include/button.h"
+#include "include/matrix.h"
 #include "lib/libINET/data.h"
 #include <wiringPi.h>
 #include <pthread.h>
@@ -7,7 +8,7 @@
 //CONFIGURATION RESEAU
 #define PORT_SVC 5000
 //mettre l'ip automatiquement
-#define IP "192.168.190.204"
+#define IP "192.168.4.1"
 
 //GETION DES PIN
 #define ROW 4
@@ -33,6 +34,91 @@ button matrix;
 double frequencies[100];
 int num_frequencies = 0;
 
+uchar disp[9][8] = {
+	{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, //Blank
+    {
+		0b00000000,
+		0b01100000,
+		0b10010000,
+		0b10010000,
+		0b00001001,
+		0b00001001,
+		0b00000110,
+		0b00000000
+	},//sin1
+	{
+		0b00000000,
+		0b11000000,
+		0b00100001,
+		0b00100001,
+		0b00010010,
+		0b00010010,
+		0b00001100,
+		0b00000000
+	},//sin2
+	{
+		0b00000000,
+		0b10000001,
+		0b01000010,
+		0b01000010,
+		0b00100100,
+		0b00100100,
+		0b00011000,
+		0b00000000
+	},
+	{
+		0b00000000,
+		0b00000011,
+		0b10000100,
+		0b10000100,
+		0b01001000,
+		0b01001000,
+		0b00110000,
+		0b00000000
+	},
+	{
+		0b00000000,
+		0b00000110,
+		0b00001001,
+		0b00001001,
+		0b10010000,
+		0b10010000,
+		0b01100000,
+		0b00000000
+	},
+	{
+		0b00000000,
+		0b00001100,
+		0b00010010,
+		0b00010010,
+		0b00100001,
+		0b00100001,
+		0b11000000,
+		0b00000000
+	},
+	{
+		0b00000000,
+		0b00011000,
+		0b00100100,
+		0b00100100,
+		0b01000010,
+		0b01000010,
+		0b10000001,
+		0b00000000
+	},
+	{
+		0b00000000,
+		0b00110000,
+		0b01001000,
+		0b01001000,
+		0b10000100,
+		0b10000100,
+		0b00000011,
+		0b00000000
+	}
+
+};
+
 int main(void) {
     
     snd_pcm_t *handle;
@@ -41,6 +127,7 @@ int main(void) {
     setup();
     //initialiser la matrice de bouton et de fréquence
     initButtonMatrix(&matrix, ROW, COL);
+    initLedMatrix();
     // Initialiser le périphérique audio
     init_audio(&handle);
 
