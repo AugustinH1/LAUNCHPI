@@ -22,22 +22,21 @@ void deserialize_matrix(char *buffer, button *matrix);
 
 
 int main() {
-    //création de la socket de dialogue
+    // Création de la socket de dialogue
     socket_t sockDialogue;
     sockDialogue = connecterClt2Srv(IP, PORT_SVC);
-
-    
 
     button matrix;
 
     recevoir(&sockDialogue, &matrix, (pFct)deserialize_matrix);
-    //initButtonMatrix(&matrix, ROW, COL);
 
     // Initialiser ncurses
     initscr();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
+    start_color();  // Activer les couleurs
+    init_pair(1, COLOR_BLACK, COLOR_WHITE);  // Couleurs pour la sélection
 
     display_matrix(&matrix);
 
@@ -58,61 +57,63 @@ int main() {
                 break;
             case '\n':
                 modify_frequency(&matrix);
-                
-
                 envoyer(&sockDialogue, &matrix, (pFct)serialize_matrix);
                 break;
         }
         display_matrix(&matrix);
-        
-
     }
     
-    //envoyer la matriceou tou  est a -1
+    // Envoyer la matrice où tout est à -1
     matrix.frequencies[0][0] = -1;
     envoyer(&sockDialogue, &matrix, (pFct)serialize_matrix);
-    //fermeture de la socket de dialogue
-    close(sockDialogue.fd);
 
+    // Fermeture de la socket de dialogue
+    close(sockDialogue.fd);
 
     // Terminer ncurses
     endwin();
     return 0;
 }
 
-
-
 void display_matrix(button *matrix) {
     clear();
+
+    // Calculer la position de départ pour centrer la matrice
+    int start_row = (LINES - ROW) / 2;
+    int start_col = (COLS - COL * 10) / 2;
+
     for (int i = 0; i < ROW; ++i) {
         for (int j = 0; j < COL; ++j) {
             if (i == selected_row && j == selected_col) {
-                attron(A_REVERSE);
-                mvprintw(i, j * 10, "%.2f", matrix->frequencies[i][j]);
-                attroff(A_REVERSE);
+                attron(COLOR_PAIR(1));
+                mvprintw(start_row + i, start_col + j * 10, "%.0f", matrix->frequencies[i][j]);
+                attroff(COLOR_PAIR(1));
             } else {
-                mvprintw(i, j * 10, "%.2f", matrix->frequencies[i][j]);
+                mvprintw(start_row + i, start_col + j * 10, "%.0f", matrix->frequencies[i][j]);
             }
         }
     }
+
     // Afficher le menu récapitulatif en bas
-    mvprintw(ROW + 1, 0, "Utilisez les flèches pour naviguer. Appuyez sur Entrée pour modifier une fréquence.");
-    mvprintw(ROW + 2, 0, "Appuyez sur 'q' pour quitter.");
+    mvprintw(LINES - 2, 0, "Utilisez les flèches pour naviguer. Appuyez sur Entrée pour modifier une fréquence.");
+    mvprintw(LINES - 1, 0, "Appuyez sur 'q' pour quitter.");
+
     refresh();
 }
 
 void modify_frequency(button *matrix) {
     echo();  // Activer l'affichage de la saisie utilisateur
-    mvprintw(ROW + 3, 0, "Entrez la nouvelle fréquence pour le bouton [%d, %d] : ", selected_row, selected_col);
+    mvprintw(LINES - 4, 0, "Entrez la nouvelle fréquence pour le bouton [%d, %d] : ", selected_row, selected_col);
     clrtoeol();  // Effacer la ligne après le message
     refresh();
-    while(1){    
+    while(1) {    
         char input[100];
         getstr(input);  // Attendre que l'utilisateur entre une chaîne de caractères
 
-        //si valuer negative, redemader la saisie
-        if(atof(input) < 0){
-            mvprintw(ROW + 4, 0, "Valeur négative non autorisée");
+        // Si valeur négative, redemander la saisie
+        if (atof(input) < 0) {
+            mvprintw(LINES - 3, 0, "Valeur négative non autorisée");
+            clrtoeol();
             refresh();
         } else {
             matrix->frequencies[selected_row][selected_col] = atof(input);  // Convertir et stocker
@@ -131,7 +132,6 @@ void serialize_matrix(button *matrix, char *buffer) {
     matrix->frequencies[2][0], matrix->frequencies[2][1], matrix->frequencies[2][2], matrix->frequencies[2][3],
     matrix->frequencies[3][0], matrix->frequencies[3][1], matrix->frequencies[3][2], matrix->frequencies[3][3]);
 }
-
 
 void deserialize_matrix(char *buffer, button *matrix) {
     sscanf(buffer, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",

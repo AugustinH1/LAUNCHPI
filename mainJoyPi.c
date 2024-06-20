@@ -4,6 +4,7 @@
 #include "lib/libINET/data.h"
 #include <wiringPi.h>
 #include <pthread.h>
+#include <ncurses.h>
 
 //CONFIGURATION RESEAU
 #define PORT_SVC 5000
@@ -15,7 +16,6 @@
 #define COL 4
 
 #define SENSITIVE_BUTTON 0
-#define VIBRATION 2
 
 int rowPins[ROW] = {2, 3, 21, 22};   // Broches GPIO pour les lignes // pin 13, 15 29 31
 int colPins[COL] = {6, 25, 24, 23};  // Broches GPIO pour les colonnes // pin 22 37 35 33
@@ -122,22 +122,57 @@ uchar disp[9][8] = {
 
 };
 
+void init_ncurses() {
+    initscr();              // Initialiser ncurses
+    cbreak();               // Désactiver le buffering de ligne
+    noecho();               // Ne pas afficher les touches tapées
+    curs_set(FALSE);        // Cacher le curseur
+    start_color();          // Activer les couleurs
+    init_pair(1, COLOR_RED, COLOR_BLACK); // Définir le pair de couleurs rouge sur fond noir
+}
+
+void draw_matrix(WINDOW *win, button *matrix) {
+    wclear(win);
+
+    box(win, 0, 0); // Dessiner une bordure autour de la fenêtre
+    
+    // Dessiner la matrice de boutons à l'intérieur de la fenêtre
+    int i,j;
+    for (i = 0; i < ROW; i++) {
+        for (j = 0; j < COL; j++) {
+            int x = i + 1; // Décaler d'une ligne pour la bordure supérieure
+            int y = (j * 6) + 2; // Décaler de deux colonnes pour la bordure gauche et espacer davantage les carrés
+            if (matrix->active[i][j] == 1) {
+                wattron(win, COLOR_PAIR(1)); // Activer les couleurs définies pour les carrés actifs
+                mvwprintw(win, x, y, "%.0f", matrix->frequencies[i][j]); // Afficher la fréquence
+                wattroff(win, COLOR_PAIR(1)); // Désactiver les couleurs définies
+            } else {
+                mvwprintw(win, x, y, "%.0f", matrix->frequencies[i][j]); // Afficher la fréquence
+            }
+        }
+    }
+    wrefresh(win); // Rafraîchir la fenêtre pour afficher la matrice de boutons
+}
+
 int main(void) {
     
     snd_pcm_t *handle;
 
-    //initialiser wirpingpi
+    //initialiser
     setup();
-    //initialiser la matrice de bouton et de fréquence
     initButtonMatrix(&matrix, ROW, COL);
     initLedMatrix();
-    // Initialiser le périphérique audio
     init_audio(&handle);
-
-    //initialiser le thread
+    init_ncurses();
     pthread_t threadInet;
     pthread_create(&threadInet, NULL, getMatriceInet, NULL);
 
+    // Créer une nouvelle fenêtre pour la matrice de boutons
+    int win_height = ROW + 2; // Hauteur de la fenêtre incluant la bordure
+    int win_width = (COL * 6) + 2; // Largeur de la fenêtre incluant la bordure, ajusté pour les fréquences
+    int start_row = (LINES - win_height) / 2; // Calculer la position de départ pour centrer verticalement
+    int start_col = (COLS - win_width) / 2; // Calculer la position de départ pour centrer horizontalement
+    WINDOW *win = newwin(win_height, win_width, start_row, start_col);
     
     while (1) {
 
@@ -150,15 +185,13 @@ int main(void) {
         for (i = 0; i < ROW; i++) {
             for (j = 0; j < COL; j++) {
                 if (matrix.active[i][j] == 1) {
-                    printf("%f, ", matrix.frequencies[i][j]);
                     frequencies[num_frequencies++] = matrix.frequencies[i][j];
                 }
             }
 
         }
-        if (num_frequencies > 0) {
-            printf("\n" );
-        }
+
+        draw_matrix(win, &matrix);
         
         //JOUER LE SON
         play_tones(handle, frequencies, num_frequencies, 0.1);
@@ -180,7 +213,7 @@ void *getMatriceInet(){
 
         socket_t sockDialogue;
         sockDialogue = accepterClt(sockEcoute);
-        printf("ip client: %s\n", inet_ntoa(sockDialogue.addrDst.sin_addr));
+        //printf("ip client: %s\n", inet_ntoa(sockDialogue.addrDst.sin_addr));
 
         close(sockEcoute.fd);
 
@@ -197,16 +230,15 @@ void *getMatriceInet(){
             int flag = 0;
             for (i = 0; i < ROW; i++) {
                 for (j = 0; j < COL; j++) {
-                    printf("%.2f ", tmp.frequencies[i][j]);
+                    //printf("%.2f ", tmp.frequencies[i][j]);
                     if(tmp.frequencies[i][j] == -1){
                         flag = 1;
                     }
                 }
-                printf("\n");
             }        
             
             if(flag == 1){
-                printf("fin de la communication\n");
+                //printf("fin de la communication\n");
                 break;
             }
 
@@ -255,13 +287,6 @@ void readButtonMatrix(button *matrix) {
         digitalWrite(rowPins[row], HIGH);
 
     }
-
-    if(digitalRead(SENSITIVE_BUTTON) == HIGH)
-        digitalWrite(VIBRATION, HIGH);
-    else
-        digitalWrite(VIBRATION, LOW);
-
-    
 
     // Copier l'état temporaire dans la structure matrix
     memcpy(matrix->active, tmpActive, sizeof(tmpActive));

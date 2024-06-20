@@ -8,7 +8,7 @@ IP_JOYPI?=192.168.4.1
 IP_400?=
 
 CFLAGS = -Wall -Wextra
-TARGET_RPI =-L target_rpi/lib -I target_rpi/include
+TARGET_RPI =-L target_rpi/lib -I target_rpi/include -I target_rpi/include/ncurses
 CC = gcc
 ARM = $(CCC)
 
@@ -57,7 +57,7 @@ matrix.o: lib/matrix.c
 OBJ=lib/sound.o lib/button.o lib/matrix.o
 
 mainJoyPiRpi.exe: mainJoyPi.c sound.o button.o libINETRPI.a matrix.o
-	$(ARM) $(CFLAGS) $(TARGET_RPI) mainJoyPi.c $(OBJ) -o mainJoyPiRpi.exe -l wiringPi -lasound -lbcm2835 -lm -lpthread -L lib -lINETRPI
+	$(ARM) $(CFLAGS) $(TARGET_RPI) mainJoyPi.c $(OBJ) -o mainJoyPiRpi.exe -l wiringPi -lasound -lbcm2835 -lm -lpthread -L lib -lINETRPI -lrt -lncurses
 
 
 
@@ -70,13 +70,6 @@ install400: main400Rpi.exe
 	sshpass -ppi scp main400Rpi.exe pi@$(IP_400):/home/pi/
 
 install: installJoyPi install400
-
-
-test_matrix.exe: test_matrix.c
-	$(ARM) $(CFLAGS) $(TARGET_RPI) $^ -o $@ -lbcm2835 -lm
-
-installtest: test_matrix.exe
-	sshpass -ppi scp test_matrix.exe pi@$(IP_JOYPI):/home/pi/
 
 
 clean:
