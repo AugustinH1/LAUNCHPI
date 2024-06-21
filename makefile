@@ -5,7 +5,7 @@ CCC?=$(PATH_CC)/arm-linux-gnueabihf-gcc
 AR?=$(PATH_CC)/arm-linux-gnueabihf-ar
 
 IP_JOYPI?=192.168.4.1
-IP_400?=
+IP_400?=192.168.4.5
 
 CFLAGS = -Wall -Wextra
 TARGET_RPI =-L target_rpi/lib -I target_rpi/include -I target_rpi/include/ncurses
@@ -58,6 +58,10 @@ OBJ=lib/sound.o lib/button.o lib/matrix.o
 
 mainJoyPiRpi.exe: mainJoyPi.c sound.o button.o libINETRPI.a matrix.o
 	$(ARM) $(CFLAGS) $(TARGET_RPI) mainJoyPi.c $(OBJ) -o mainJoyPiRpi.exe -l wiringPi -lasound -lbcm2835 -lm -lpthread -L lib -lINETRPI -lrt -lncurses
+
+
+main400Rpi.exe: main400.c button.o libINETRPI.a
+	$(ARM) $(CFLAGS) $(TARGET_RPI) main400.c lib/button.o -o main400Rpi.exe -lm -lncurses -L lib -lINETRPI
 
 
 

@@ -82,8 +82,9 @@ void display_matrix(button *matrix) {
     int start_row = (LINES - ROW) / 2;
     int start_col = (COLS - COL * 10) / 2;
 
-    for (int i = 0; i < ROW; ++i) {
-        for (int j = 0; j < COL; ++j) {
+    int i,j;
+    for (i = 0; i < ROW; ++i) {
+        for (j = 0; j < COL; ++j) {
             if (i == selected_row && j == selected_col) {
                 attron(COLOR_PAIR(1));
                 mvprintw(start_row + i, start_col + j * 10, "%.0f", matrix->frequencies[i][j]);
